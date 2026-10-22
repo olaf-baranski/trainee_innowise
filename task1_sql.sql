@@ -1,7 +1,7 @@
---Output the number of movies in each category, sorted descending.
+-- Output the number of movies in each category, sorted descending.
 
-SELECT 
-    cat.name, 
+SELECT
+    cat.name AS category_name,
     COUNT(fc.film_id) AS number_of_movies
 FROM category cat
 LEFT JOIN film_category fc
@@ -10,7 +10,7 @@ GROUP BY cat.category_id, cat.name
 ORDER BY number_of_movies DESC;
 
 
---Output the 10 actors whose movies rented the most, sorted in descending order.
+-- Output the 10 actors whose movies rented the most, sorted in descending order.
 
 WITH ranked_actors AS (
     SELECT
@@ -41,7 +41,7 @@ WHERE rental_rank <= 10
 ORDER BY rented_number DESC, actor_id;
 
 
---Output the category of movies on which the most money was spent.
+-- Output the category of movies on which the most money was spent.
 
 WITH ranked_categories AS (
     SELECT
@@ -63,14 +63,14 @@ WITH ranked_categories AS (
     GROUP BY cat.category_id, cat.name
 )
 SELECT
-    name,
+    name AS category_name,
     money_spent
 FROM ranked_categories
 WHERE category_rank = 1
 ORDER BY money_spent DESC, name;
 
 
---Print the names of movies that are not in the inventory. Write a query without using the IN operator.
+-- Print the names of movies that are not in the inventory. Write a query without using the IN operator.
 
 SELECT 
 	f.title
@@ -80,15 +80,18 @@ LEFT JOIN inventory i
 WHERE i.film_id IS NULL;
 
 
---Output the top 3 actors who have appeared the most in movies in the “Children” category. If several actors have the same number of movies, output all of them.
+-- Output the top 3 actors who have appeared the most in movies in the “Children” category. If several actors have the same number of movies, output all of them.
 
 WITH ranked_actors AS (
-    SELECT 
-        a.first_name, 
+    SELECT
+        a.first_name,
         a.last_name,
-        a.actor_id, 
+        a.actor_id,
         COUNT(fa.film_id) AS movies_count,
-        DENSE_RANK() OVER(ORDER BY COUNT(fa.film_id) DESC) AS actor_rank
+        -- RANK includes ties within the top 3 positions.
+        RANK() OVER (
+            ORDER BY COUNT(fa.film_id) DESC
+        ) AS actor_rank
     FROM actor a
     JOIN film_actor fa
         ON a.actor_id = fa.actor_id
@@ -108,8 +111,7 @@ FROM ranked_actors
 WHERE actor_rank <= 3
 ORDER BY movies_count DESC, actor_id;
 
-
---Output cities with the number of active and inactive customers (active - customer.active = 1). Sort by the number of inactive customers in descending order.
+-- Output cities with the number of active and inactive customers (active - customer.active = 1). Sort by the number of inactive customers in descending order.
 
 SELECT 
 	ci.city, 
@@ -124,18 +126,19 @@ GROUP BY ci.city_id, ci.city
 ORDER BY inactive_customers DESC, ci.city;
 
 
---Output the category of movies that have the highest number of total rental hours in the city (customer.address_id in this city) and that start with the letter “a”. Do the same for cities that have a “-” in them. Write everything in one query.
+-- Output the category of movies that have the highest number of total rental hours in the city (customer.address_id in this city) and that start with the letter “a”. Do the same for cities that have a “-” in them. Write everything in one query.
 
 WITH city_cohorts AS (
-    SELECT city_id, 'Starts with A' AS city_group
-    FROM city
-    WHERE city ILIKE 'a%'
+    SELECT ci.city_id, 'Starts with A' AS city_group
+    FROM city ci
+    -- ILIKE is PostgreSQL-specific and case-insensitive.
+    WHERE ci.city ILIKE 'a%'
 
     UNION ALL
 
-    SELECT city_id, 'Contains hyphen' AS city_group
-    FROM city
-    WHERE city LIKE '%-%'
+    SELECT ci.city_id, 'Contains hyphen' AS city_group
+    FROM city ci
+    WHERE ci.city LIKE '%-%'
 ),
 city_category_hours AS (
     SELECT
@@ -159,6 +162,7 @@ city_category_hours AS (
         ON i.film_id = fc.film_id
     JOIN category cat
         ON fc.category_id = cat.category_id
+    -- Only completed rentals are counted because their full duration is known.
     WHERE r.return_date IS NOT NULL
     GROUP BY cc.city_group, cat.category_id, cat.name
 ),
@@ -176,8 +180,7 @@ ranked_categories AS (
 SELECT
     city_group,
     name,
-    rental_hours,
-    category_rank
+    rental_hours
 FROM ranked_categories
 WHERE category_rank = 1
 ORDER BY rental_hours DESC, city_group, name;

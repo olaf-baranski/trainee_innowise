@@ -1,3 +1,9 @@
+-- SQL Practical Assignment
+-- DBMS: PostgreSQL 18
+-- Database: Pagila
+-- Tasks: Q1-Q7
+
+
 -- Output the number of movies in each category, sorted descending.
 
 SELECT
@@ -72,11 +78,11 @@ ORDER BY money_spent DESC, name;
 
 -- Print the names of movies that are not in the inventory. Write a query without using the IN operator.
 
-SELECT 
-	f.title
+SELECT
+    f.title
 FROM film f
-LEFT JOIN inventory i 
-	ON f.film_id = i.film_id
+LEFT JOIN inventory i
+    ON f.film_id = i.film_id
 WHERE i.film_id IS NULL;
 
 
@@ -113,10 +119,10 @@ ORDER BY movies_count DESC, actor_id;
 
 -- Output cities with the number of active and inactive customers (active - customer.active = 1). Sort by the number of inactive customers in descending order.
 
-SELECT 
-	ci.city, 
-	SUM(CASE WHEN cu.active = 1 THEN 1 ELSE 0 END) AS active_customers,
-	SUM(CASE WHEN cu.active = 0 THEN 1 ELSE 0 END) AS inactive_customers
+SELECT
+    ci.city,
+    SUM(CASE WHEN cu.active = 1 THEN 1 ELSE 0 END) AS active_customers,
+    SUM(CASE WHEN cu.active = 0 THEN 1 ELSE 0 END) AS inactive_customers
 FROM city ci
 LEFT JOIN address ad
     ON ci.city_id = ad.city_id

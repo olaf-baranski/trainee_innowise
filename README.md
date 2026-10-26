@@ -14,4 +14,4 @@
 3. Open the `.sql` assignment file in the SQL Editor.
 4. Execute the queries individually.
 
-The file contains seven SQL queries (Q1–Q7). All queries are read-only and do not modify the database.
+The file contains seven SQL queries (Q1-Q7). All queries are read-only and do not modify the database.
